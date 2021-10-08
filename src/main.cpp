@@ -3,7 +3,7 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
+#include "rendering/Lights.h"
 #define  GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -25,7 +25,7 @@ glm::vec3 cam_position = glm::vec3(0.0f, 1.0f, 1.2f);
 glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.5f, 0.0f);
 glm::vec3 cam_up       = glm::vec3(0.0f, 1.0f, 0.0f);
 
-glm::mat4 world_matrix      = glm::mat4(1.0f);
+glm::mat4 world_matrix      = glm::rotate(glm::mat4(1.0f),3.14f, glm::vec3(0, 1, 0));
 glm::mat4 view_matrix       = glm::lookAt(cam_position, cam_look_at, cam_up);
 glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 10.0f);
 
@@ -84,12 +84,37 @@ int init()
 int loadContent()
 {
     mesh = new Model("res/models/alliance.obj");
-
-    /* Create and apply basic shader */
+    struct Light l1 = {glm::vec3(1.0f,.0f,0.0f),
+                      1.0f,
+                      0.09,
+                      0.032,
+                      glm::vec3(0.0f, 0.0f, 0.0f),
+                      glm::vec3(0.9f, 0.f, 0.f),
+                      glm::vec3(.0f, .0f, .0f)};
+    struct Light l2 = { glm::vec3(.0f,1.0f,0.0f),
+                      1.0f,
+                      0.09,
+                      0.032,
+                      glm::vec3(0.0f, 0.0f, 0.0f),
+                      glm::vec3(0.0f, 0.9f, 0.0f),
+                      glm::vec3(.0f, .0f, .0f) };
+    struct Light l3 = { glm::vec3(.0f,.0f,1.0f),
+                      1.0f,
+                      0.09,
+                      0.032,
+                      glm::vec3(0.0f, 0.0f, 0.0f),
+                      glm::vec3(0.0f, 0.0f, 0.9f),
+                      glm::vec3(.0f, .0f, .0f) };
+    Lights lights(3);
+    lights.Add(l1);
+    lights.Add(l2);
+    lights.Add(l3);
+     /* Create and apply basic shader */
     shader = new Shader("multiple_lights.vert", "multiple_lights.frag");
+    lights.Bind(shader);
     shader->apply();
 
-    shader->setUniformMatrix4fv("model",        world_matrix);
+    shader->setUniformMatrix4fv("model", world_matrix);
     //shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
     shader->setUniformMatrix4fv("view", view_matrix);
     shader->setUniformMatrix4fv("projection", projection_matrix );
@@ -114,9 +139,14 @@ void render(float time)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     /* Draw our triangle */
-    world_matrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
-
-    shader->setUniformMatrix4fv("model", world_matrix);
+    // world_matrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
+    glm::vec3 pos = glm::vec3(cos(time),0, sin(time));
+    shader->setUniform3fv("pointLights[0].position", pos);
+    pos = glm::vec3(cos(time+ 3.14 * 2 / 3 * 1), 0, sin(time + 3.14 * 2 / 3 * 1));
+    shader->setUniform3fv("pointLights[1].position", pos);
+    pos = glm::vec3(cos(time + 3.14 * 2 / 3 * 2), 0, sin(time + 3.14 * 2 / 3 * 2));
+    shader->setUniform3fv("pointLights[2].position", pos);
+    // shader->setUniformMatrix4fv("model", world_matrix);
     //shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
    shader->apply();
     texture->bind();
@@ -135,7 +165,6 @@ void update()
         /* Update game time value */
         newTime  = static_cast<float>(glfwGetTime());
         gameTime = newTime - startTime;
-
         /* Render here */
         render(gameTime);
 
