@@ -23,7 +23,7 @@ void Lights::Bind(Shader *shader){
        shader->setUniform1f( s+"].constant", lights[i].constant);
        shader->setUniform1f( s+"].linear", lights[i].linear);
        shader->setUniform1f( s+"].quadratic", lights[i].quadratic);
-    //    shader->setUniform3fv(s+"].ambient", lights[i].ambient);
+       shader->setUniform3fv(s+"].ambient", lights[i].ambient);
        shader->setUniform3fv(s+"].diffuse", lights[i].diffuse);
        shader->setUniform3fv(s+"].specular", lights[i].specular);
    }

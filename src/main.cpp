@@ -48,7 +48,7 @@ int init()
 
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -118,7 +118,7 @@ int loadContent()
     //shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
     shader->setUniformMatrix4fv("view", view_matrix);
     shader->setUniformMatrix4fv("projection", projection_matrix );
-    shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -0.0f,-1.0f));
+    shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,-1.0f));
     shader->setUniform3fv("dirLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
     //shader->setUniform3fv("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
     
