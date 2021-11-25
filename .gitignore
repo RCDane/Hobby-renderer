@@ -27,6 +27,7 @@ build
 *.userprefs
 
 # Build results
+.vscode/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/

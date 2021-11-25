@@ -5,13 +5,16 @@
 #include <GLFW/glfw3.h>
 #include "rendering/Lights.h"
 #define  GLM_FORCE_RADIANS
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/gtx/string_cast.hpp>
+#include <vector>
+#include <stdlib.h>
 #include "rendering/Shader.h"
 #include "rendering/Texture.h"
 #include "rendering/Model.h"
-
+#include "rendering/GameObject.h"
 GLFWwindow* window;
 const int WINDOW_WIDTH  = 1024;
 const int WINDOW_HEIGHT = 768;
@@ -21,7 +24,7 @@ Shader  * shader  = nullptr;
 Texture * texture = nullptr;
 
 /* Matrices */
-glm::vec3 cam_position = glm::vec3(0.0f, 1.0f, 1.2f);
+glm::vec3 cam_position = glm::vec3(0.0f, 1.0f, -1.2f);
 glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.5f, 0.0f);
 glm::vec3 cam_up       = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -29,11 +32,14 @@ glm::mat4 world_matrix      = glm::rotate(glm::mat4(1.0f),3.14f, glm::vec3(0, 1,
 glm::mat4 view_matrix       = glm::lookAt(cam_position, cam_look_at, cam_up);
 glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 10.0f);
 
+float rho = 0.0f;
+float phi = 0.0f;
+
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
     projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(width), float(height), 0.1f, 10.0f);
-
+    
     if (shader != nullptr)
     {
         shader->setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
@@ -80,28 +86,29 @@ int init()
 
     return true;
 }
+std::vector<GameObject> gameObjects;
 
 int loadContent()
 {
     mesh = new Model("res/models/alliance.obj");
-    struct Light l1 = {glm::vec3(1.0f,.0f,0.0f),
+    struct Light l1 = {glm::vec3(1.0f,.0f,-1.0f),
                       1.0f,
-                      0.09,
-                      0.032,
+                      0.09f,
+                      0.032f,
                       glm::vec3(0.0f, 0.0f, 0.0f),
                       glm::vec3(0.9f, 0.f, 0.f),
                       glm::vec3(.0f, .0f, .0f)};
-    struct Light l2 = { glm::vec3(.0f,1.0f,0.0f),
+    struct Light l2 = { glm::vec3(.0f,1.0f,-1.0f),
                       1.0f,
-                      0.09,
-                      0.032,
+                      0.09f,
+                      0.032f,
                       glm::vec3(0.0f, 0.0f, 0.0f),
-                      glm::vec3(0.0f, 0.9f, 0.0f),
+                      glm::vec3(0.0f, 0.4f, 0.0f),
                       glm::vec3(.0f, .0f, .0f) };
-    struct Light l3 = { glm::vec3(.0f,.0f,1.0f),
+    struct Light l3 = { glm::vec3(-1.0f,.0f,1.0f),
                       1.0f,
-                      0.09,
-                      0.032,
+                      0.09f,
+                      0.032f,
                       glm::vec3(0.0f, 0.0f, 0.0f),
                       glm::vec3(0.0f, 0.0f, 0.9f),
                       glm::vec3(.0f, .0f, .0f) };
@@ -114,22 +121,34 @@ int loadContent()
     lights.Bind(shader);
     shader->apply();
 
-    shader->setUniformMatrix4fv("model", world_matrix);
+    // shader->setUniformMatrix4fv("model", world_matrix);
     //shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
     shader->setUniformMatrix4fv("view", view_matrix);
     shader->setUniformMatrix4fv("projection", projection_matrix );
-    shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,-1.0f));
+    shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,1.0f));
     shader->setUniform3fv("dirLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
     //shader->setUniform3fv("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
     
     shader->setUniform3fv("dirLight.diffuse", glm::vec3(1.f, 1.f, 1.f));
     shader->setUniform3fv("dirLight.specular", glm::vec3(0.f, 0.f, 0.f));
  
-    //shader->setUniform3fv("cam_pos", cam_position);
+    shader->setUniform3fv("viewPos", cam_position);
+    cam_look_at = glm::normalize(cam_look_at - cam_position);
 
     texture = new Texture();
     texture->load("res/models/alliance.png");
     texture->bind();
+    Material *mat = new Material(shader, texture, texture, 1);
+    GameObject gameObj = GameObject(mesh,mat, glm::vec3(0.,0.,0.), glm::vec3(1.), glm::vec3(1.,1.,1.));
+    GameObject gameObj2 = GameObject(mesh,mat, glm::vec3(1.,1.,0.), glm::vec3(1.), glm::vec3(1.,1.,1.));
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j <10; j++) {
+            glm::vec3 pos = glm::vec3(i * 0.5-2., j * 1-3., 0.);
+            gameObjects.push_back(GameObject(mesh, mat, pos, glm::vec3(1.), glm::vec3(1., 1., 1.)* 0.3f));
+        }
+    }
+    //gameObjects.push_back(gameObj);
+    //gameObjects.push_back(gameObj2);
 
     return true;
 }
@@ -141,23 +160,55 @@ void render(float time)
     /* Draw our triangle */
     // world_matrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
     glm::vec3 pos = glm::vec3(cos(time),0, sin(time));
-    shader->setUniform3fv("pointLights[0].position", pos);
-    pos = glm::vec3(cos(time+ 3.14 * 2 / 3 * 1), 0, sin(time + 3.14 * 2 / 3 * 1));
+    /*shader->setUniform3fv("pointLights[0].position", pos);
+    pos = glm::vec3(cos(time + 3.14 * 2 / 3 * 1), 0, sin(time + 3.14 * 2. / 3. * 1.));
     shader->setUniform3fv("pointLights[1].position", pos);
-    pos = glm::vec3(cos(time + 3.14 * 2 / 3 * 2), 0, sin(time + 3.14 * 2 / 3 * 2));
-    shader->setUniform3fv("pointLights[2].position", pos);
+    pos = glm::vec3(cos(time + 3.14 * 2 / 3 * 2), 0, sin(time + 3.14 * 2. / 3. * 2.));
+    shader->setUniform3fv("pointLights[2].position", pos);*/
     // shader->setUniformMatrix4fv("model", world_matrix);
     //shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
-   shader->apply();
+    shader->apply();
     texture->bind();
-    mesh->Draw();
+    for (int i = 0; i < gameObjects.size(); i++){
+        gameObjects[i].Render();
+        
+    }
+    //mesh->Draw();
+}
+float gameTime = 0.0f;
+
+void UpdateCamera(int key){
+    if(key == GLFW_KEY_A) {
+        cam_position = cam_position + glm::normalize(-glm::cross(cam_look_at, cam_up))*gameTime * 0.03f;
+    }
+    if(key == GLFW_KEY_D) {
+        cam_position = cam_position + glm::normalize(glm::cross(cam_look_at-cam_position, cam_up))*gameTime* 0.03f;;
+    }
+    if(key == GLFW_KEY_W) {
+        cam_position = cam_position + glm::normalize(cam_look_at-cam_position)*gameTime* 0.03f;
+    }
+    if(key == GLFW_KEY_S) {
+        cam_position = cam_position - glm::normalize(cam_look_at-cam_position)*gameTime* 0.03f;
+    }
+    std::cout <<  glm::to_string(cam_position) << std::endl;
+
+    view_matrix      = glm::lookAt(cam_position, cam_position + cam_look_at, cam_up);
+
+    shader->setUniformMatrix4fv("view", view_matrix);
+}
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_A || key ==  GLFW_KEY_S || key == GLFW_KEY_W || key == GLFW_KEY_D)
+        UpdateCamera(key);
+
 }
 
 void update()
 {
     float startTime = static_cast<float>(glfwGetTime());
     float newTime  = 0.0f;
-    float gameTime = 0.0f;
+    gameTime = 0.0f;
+    glfwSetKeyCallback(window, key_callback);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -194,3 +245,4 @@ int main(void)
 
     return 0;
 }
+

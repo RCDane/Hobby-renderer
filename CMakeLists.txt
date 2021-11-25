@@ -1,7 +1,9 @@
 
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(Deferred_Renderer_and_Culling_algorithms)
-
+# add_subdirectory(Core)
+# add_subdirectory(Multiple_Lights)
+# add_subdirectory(Deferred_Rendering)
 # Add .lib files
 link_directories(${CMAKE_SOURCE_DIR}/lib)
 
