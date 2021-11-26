@@ -1,6 +1,9 @@
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "GameObject.h"
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <glm/matrix.hpp>
 Transform::Transform(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale ){
     this->position = position;
@@ -8,8 +11,18 @@ Transform::Transform(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale ){
     this->scale = scale;
 }
 
+glm::mat4 Transform::GetPosition(){
+    return glm::translate(glm::mat4(1.f), this->position);
+}
+
+glm::mat4 Transform::GetScale(){
+    return glm::scale(glm::mat4(1.0f),scale);
+}
+glm::mat4 Transform::GetRotation(){
+    return glm::mat4(0.0f);
+}
 glm::mat4 Transform::GetTransform(){
-    glm::mat4 model = glm::mat4(1.f);
+    glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 scale = glm::scale(model,this->scale);
     glm::mat4 translation = glm::translate(scale, this->position);
     
@@ -27,9 +40,21 @@ void Transform::setScale(glm::vec3 scale){
     this->scale = scale;
 }
 
+glm::mat4 GameObject::GetPosition(){
+    return this->transform.GetPosition();
+}
+
+glm::mat4 GameObject::GetScale(){
+    return this->transform.GetScale();
+}
+void GameObject::RenderAABB(glm::mat4 view, glm::mat4 projection){
+    // std::cout << glm::to_string(this->GetPosition()) << std::endl;
+    this->aabb->Render(glm::mat4(1.0f),view,projection);
+}
 void  GameObject::Render(){
     this->material->BindParameters();
     Shader* s = this->material->GetShader();
+    s->apply();
     glm::mat4 m = this->transform.GetTransform();
     s->setUniformMatrix4fv("model", m);
     //  this->material->PrepareShader();
@@ -40,5 +65,6 @@ void  GameObject::Render(){
 GameObject::GameObject(Model* model,Material* material,glm::vec3 position, glm::vec3 rotation, glm::vec3 scale){
     this->transform = Transform(position,rotation, scale);
     this->model = model;
+    this->aabb = new AABB(this->model->meshes[0].vertices,this->transform.GetScale()* this->transform.GetRotation());
     this->material = material;
 }

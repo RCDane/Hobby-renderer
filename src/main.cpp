@@ -15,6 +15,7 @@
 #include "rendering/Texture.h"
 #include "rendering/Model.h"
 #include "rendering/GameObject.h"
+// #include "rendering/LineDrawer.h"
 GLFWwindow* window;
 const int WINDOW_WIDTH  = 1024;
 const int WINDOW_HEIGHT = 768;
@@ -121,13 +122,12 @@ int loadContent()
     lights.Bind(shader);
     shader->apply();
 
-    // shader->setUniformMatrix4fv("model", world_matrix);
-    //shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
+    
     shader->setUniformMatrix4fv("view", view_matrix);
     shader->setUniformMatrix4fv("projection", projection_matrix );
+    // Setting directional light direction
     shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,1.0f));
     shader->setUniform3fv("dirLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-    //shader->setUniform3fv("dirLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
     
     shader->setUniform3fv("dirLight.diffuse", glm::vec3(1.f, 1.f, 1.f));
     shader->setUniform3fv("dirLight.specular", glm::vec3(0.f, 0.f, 0.f));
@@ -147,8 +147,6 @@ int loadContent()
             gameObjects.push_back(GameObject(mesh, mat, pos, glm::vec3(1.), glm::vec3(1., 1., 1.)* 0.3f));
         }
     }
-    //gameObjects.push_back(gameObj);
-    //gameObjects.push_back(gameObj2);
 
     return true;
 }
@@ -157,22 +155,20 @@ void render(float time)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    /* Draw our triangle */
-    // world_matrix = glm::rotate(glm::mat4(1.0f), time * glm::radians(-90.0f), glm::vec3(0, 1, 0));
+    
     glm::vec3 pos = glm::vec3(cos(time),0, sin(time));
-    /*shader->setUniform3fv("pointLights[0].position", pos);
-    pos = glm::vec3(cos(time + 3.14 * 2 / 3 * 1), 0, sin(time + 3.14 * 2. / 3. * 1.));
-    shader->setUniform3fv("pointLights[1].position", pos);
-    pos = glm::vec3(cos(time + 3.14 * 2 / 3 * 2), 0, sin(time + 3.14 * 2. / 3. * 2.));
-    shader->setUniform3fv("pointLights[2].position", pos);*/
-    // shader->setUniformMatrix4fv("model", world_matrix);
-    //shader->setUniformMatrix3fv("normalMatrix", glm::inverse(glm::transpose(glm::mat3(world_matrix))));
+    
+
     shader->apply();
     texture->bind();
+    // LineDrawer lineDrawer = LineDrawer();
     for (int i = 0; i < gameObjects.size(); i++){
         gameObjects[i].Render();
+        gameObjects[i].RenderAABB(view_matrix,projection_matrix);
         
     }
+        // gameObjects[5].Render();
+        // gameObjects[5].RenderAABB(view_matrix,projection_matrix);
     //mesh->Draw();
 }
 float gameTime = 0.0f;

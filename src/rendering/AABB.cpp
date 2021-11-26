@@ -1,13 +1,17 @@
 #include "AABB.h"
-AABB::AABB(std::vector<Vertex> vertices)
+#include "LineDrawer.h"
+AABB::AABB(std::vector<Vertex> vertices, glm::mat4 model)
 {
     int size = vertices.size();
-    float xmin, xmax = 0.0;
-    float ymin, ymax = 0.0; 
-    float zmin, zmax = 0.0; 
+    float xmin = 0.0;
+    float xmax = 0.0;
+    float ymin = 0.0;
+    float ymax = 0.0; 
+    float zmin = 0.0;
+    float zmax = 0.0; 
 
     for (int i = 0; i < size; i++){
-        glm::vec3 v = vertices[i].Position;
+        glm::vec3 v = glm::vec4(vertices[i].Position,1.0f);
         xmin = xmin > v.x ? v.x : xmin;
         ymin = ymin > v.y ? v.y : ymin;
         zmin = zmin > v.z ? v.z : zmin;
@@ -18,7 +22,7 @@ AABB::AABB(std::vector<Vertex> vertices)
     this->max = glm::vec3(xmax, ymax, zmax);
     this->min = glm::vec3(xmin,ymin,zmin);
 }
-std::vector<glm::ivec2> edges ={
+const std::vector<glm::ivec2> edges ={
     glm::ivec2(0,1),
     glm::ivec2(0,3),
     glm::ivec2(0,4),
@@ -32,7 +36,7 @@ std::vector<glm::ivec2> edges ={
     glm::ivec2(5,4),
     glm::ivec2(5,7)
 };
-std::vector<glm::vec3> positions = {
+const std::vector<glm::vec3> positions = {
     glm::vec3(0.0,0.0,0.0),
     glm::vec3(1.0,0.0,0.0),
     glm::vec3(0.0,1.0,0.0),
@@ -42,13 +46,16 @@ std::vector<glm::vec3> positions = {
     glm::vec3(0.0,1.0,1.0),
     glm::vec3(1.0,1.0,1.0),
 };
-void AABB::Render(glm::vec3 position){
+void AABB::Render(glm::mat4 model, glm::mat4 view, glm::mat4 projection){
     std::vector<glm::vec3> vbuffer;
     glm::vec3 min = this->min; 
     glm::vec3 maxDiff = this->max - min;
-    for (int i = 0; i<0; i++){
-        vbuffer.emplace_back(min + positions[edges[i].x]* max);
-        vbuffer.emplace_back(min + positions[edges[i].y]* max);
+    for (int i = 0; i<edges.size(); i++){
+        vbuffer.emplace_back(min + positions[edges[i].x]* maxDiff);
+        vbuffer.emplace_back(min + positions[edges[i].y]* maxDiff);
     }
-    
+    LineDrawer line = LineDrawer();
+    line.DrawLines(vbuffer, model,view, projection);
+
+    vbuffer.clear();
 }
