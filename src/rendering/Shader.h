@@ -6,6 +6,8 @@
 
 #include <map>
 #include <string>
+#include <map>
+#include <memory>
 
 class Shader
 {
@@ -17,7 +19,11 @@ public:
            const std::string & tessellationEvaluationShaderFilename = "");
 
     virtual ~Shader();
-
+    static Shader BuildShader(const std::string & vertexShaderFilename,
+           const std::string & fragmentShaderFilename,
+           const std::string & geometryShaderFilename               = "",
+           const std::string & tessellationControlShaderFilename    = "",
+           const std::string & tessellationEvaluationShaderFilename = "");
     void setUniform1f       (const std::string & uniformName, float value);
     void setUniform1i       (const std::string & uniformName, int value);
     void setUniform1ui      (const std::string & uniformName, unsigned int value);
@@ -32,7 +38,7 @@ public:
     void apply();
 
 private:
-    std::map<std::string, GLint> uniformsLocations;
+    std::shared_ptr<std::map<std::string, GLint>> uniformsLocations;
 
     GLuint program_id;
     bool isLinked;

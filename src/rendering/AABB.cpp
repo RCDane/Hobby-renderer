@@ -3,6 +3,7 @@
 AABB::AABB(std::vector<Vertex> vertices, glm::mat4 model)
 {
     int size = vertices.size();
+    this->verts = std::vector<glm::vec3>(24);
     float xmin = 0.0;
     float xmax = 0.0;
     float ymin = 0.0;
@@ -21,6 +22,7 @@ AABB::AABB(std::vector<Vertex> vertices, glm::mat4 model)
     }
     this->max = glm::vec3(xmax, ymax, zmax);
     this->min = glm::vec3(xmin,ymin,zmin);
+    build_AABB();
 }
 const std::vector<glm::ivec2> edges ={
     glm::ivec2(0,1),
@@ -46,16 +48,22 @@ const std::vector<glm::vec3> positions = {
     glm::vec3(0.0,1.0,1.0),
     glm::vec3(1.0,1.0,1.0),
 };
-void AABB::Render(glm::mat4 model, glm::mat4 view, glm::mat4 projection){
-    std::vector<glm::vec3> vbuffer;
-    glm::vec3 min = this->min; 
+void AABB::build_AABB() {
+    glm::vec3 min = this->min;
     glm::vec3 maxDiff = this->max - min;
-    for (int i = 0; i<edges.size(); i++){
-        vbuffer.emplace_back(min + positions[edges[i].x]* maxDiff);
-        vbuffer.emplace_back(min + positions[edges[i].y]* maxDiff);
+    for (int i = 0; i < edges.size(); i++) {
+        verts.emplace_back(min + positions[edges[i].x] * maxDiff);
+        verts.emplace_back(min + positions[edges[i].y] * maxDiff);
     }
+    this->points_set = true;
+}
+void AABB::Render(glm::mat4 model, glm::mat4 view, glm::mat4 projection){
+    if (!this->points_set )
+    {
+        build_AABB();
+    }
+    
     LineDrawer line = LineDrawer();
-    line.DrawLines(vbuffer, model,view, projection);
+    line.DrawLines(this->verts, model,view, projection);
 
-    vbuffer.clear();
 }

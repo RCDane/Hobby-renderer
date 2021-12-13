@@ -6,16 +6,19 @@
 #include "vector"
 #include "glm/common.hpp"
 #include "Camera.h"
-LineDrawer::LineDrawer(){
-    Shader* program = new Shader("line.vert", "line.frag");
+LineDrawer::LineDrawer() : shader("line.vert", "line.frag"){
+    Shader program = Shader::BuildShader("line.vert", "line.frag");
+    this->shader.apply();
+    this->shader.setUniform3fv("color", glm::vec3(1.0,0.0,0.0));
+
     this->shader = program;
 }
 
 void LineDrawer::DrawLines(std::vector<glm::vec3> points,glm::mat4 model,glm::mat4 view,glm::mat4 projection){
-    this->shader->apply();
-    shader->setUniformMatrix4fv("model"     , model);
-    shader->setUniformMatrix4fv("view"      , view);
-    shader->setUniformMatrix4fv("projection", projection);
+    this->shader.apply();
+    this->shader.setUniformMatrix4fv("model"     , model);
+    this->shader.setUniformMatrix4fv("view"      , view);
+    this->shader.setUniformMatrix4fv("projection", projection);
     
     unsigned int VBO;
     unsigned int VAO;
@@ -31,7 +34,6 @@ void LineDrawer::DrawLines(std::vector<glm::vec3> points,glm::mat4 model,glm::ma
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
     glBindVertexArray(0); 
-    shader->setUniform3fv("color", glm::vec3(1.0,0.0,0.0));
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_LINES, 0, points.size());

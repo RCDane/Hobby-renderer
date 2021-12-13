@@ -3,7 +3,10 @@
 #include <vector>
 
 struct AABB {
-
+private:
+    bool points_set;
+    void build_AABB();
+    std::vector<glm::vec3> verts;
 public:
     AABB(std::vector<Vertex> vertices, glm::mat4 model);
     glm::vec3 min;

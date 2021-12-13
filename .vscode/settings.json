@@ -63,5 +63,6 @@
     },
     "C_Cpp.default.includePath": [
         "C:\\Repositories\\Deferred_Renderer\\include"
-    ]
+    ],
+    "C_Cpp.errorSquiggles": "Disabled"
 }

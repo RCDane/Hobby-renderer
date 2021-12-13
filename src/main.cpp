@@ -178,7 +178,7 @@ void UpdateCamera(int key){
         cam_position = cam_position + glm::normalize(-glm::cross(cam_look_at, cam_up))*gameTime * 0.03f;
     }
     if(key == GLFW_KEY_D) {
-        cam_position = cam_position + glm::normalize(glm::cross(cam_look_at-cam_position, cam_up))*gameTime* 0.03f;;
+        cam_position = cam_position + glm::normalize(glm::cross(cam_look_at-cam_position, cam_up)) * gameTime * 0.03f;;
     }
     if(key == GLFW_KEY_W) {
         cam_position = cam_position + glm::normalize(cam_look_at-cam_position)*gameTime* 0.03f;
