@@ -15,7 +15,6 @@
 #include "rendering/Texture.h"
 #include "rendering/Model.h"
 #include "rendering/GameObject.h"
-// #include "rendering/LineDrawer.h"
 GLFWwindow* window;
 const int WINDOW_WIDTH  = 1024;
 const int WINDOW_HEIGHT = 768;
@@ -164,7 +163,7 @@ void render(float time)
     // LineDrawer lineDrawer = LineDrawer();
     for (int i = 0; i < gameObjects.size(); i++){
         gameObjects[i].Render();
-        gameObjects[i].RenderAABB(view_matrix,projection_matrix);
+        // gameObjects[i].RenderAABB(view_matrix,projection_matrix);
         
     }
         // gameObjects[5].Render();
