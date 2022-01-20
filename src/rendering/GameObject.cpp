@@ -48,7 +48,7 @@ glm::mat4 GameObject::GetScale(){
     return this->transform.GetScale();
 }
 void GameObject::RenderAABB(glm::mat4 view, glm::mat4 projection){
-    // std::cout << glm::to_string(this->GetPosition()) << std::endl;
+   
     this->aabb->Render(glm::mat4(1.0f),view,projection);
 }
 void  GameObject::Render(){

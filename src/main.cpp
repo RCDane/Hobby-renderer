@@ -15,6 +15,7 @@
 #include "rendering/Texture.h"
 #include "rendering/Model.h"
 #include "rendering/GameObject.h"
+#include "rendering/Camera.h"
 GLFWwindow* window;
 const int WINDOW_WIDTH  = 1024;
 const int WINDOW_HEIGHT = 768;
@@ -22,11 +23,12 @@ const int WINDOW_HEIGHT = 768;
 Model   * mesh    = nullptr;
 Shader  * shader  = nullptr;
 Texture * texture = nullptr;
-
 /* Matrices */
 glm::vec3 cam_position = glm::vec3(0.0f, 1.0f, -1.2f);
-glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.5f, 0.0f);
+glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.0f, 1.0f);
 glm::vec3 cam_up       = glm::vec3(0.0f, 1.0f, 0.0f);
+Camera cam = Camera(cam_look_at, cam_position, cam_up);
+
 
 glm::mat4 world_matrix      = glm::rotate(glm::mat4(1.0f),3.14f, glm::vec3(0, 1, 0));
 glm::mat4 view_matrix       = glm::lookAt(cam_position, cam_look_at, cam_up);
@@ -35,6 +37,29 @@ glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WIN
 float rho = 0.0f;
 float phi = 0.0f;
 
+double oldx = 0;
+double oldy = 0;
+double newx = 0;
+double newy = 0;
+bool rightMouseDown = false;
+float gameTime = 0.0f;
+
+
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    oldx = newx;
+    oldy = newy;
+    newx = xpos;
+    newy =ypos;
+    
+    if(rightMouseDown)
+    {
+        float diffx = newx - oldx;
+        float diffy = newy - oldy;
+        cam.MouseRotate(diffx, diffy,gameTime);
+        shader->setUniformMatrix4fv("view", cam.GetCamera());
+    }
+}
 void window_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -42,10 +67,17 @@ void window_size_callback(GLFWwindow* window, int width, int height)
     
     if (shader != nullptr)
     {
-        shader->setUniformMatrix4fv("viewProj", projection_matrix * view_matrix);
+        shader->setUniformMatrix4fv("viewProj", projection_matrix * cam.GetCamera());
     }
 }
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+        rightMouseDown = true;
+    else if(button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+        rightMouseDown = false;
 
+}   
 int init()
 {
     /* Initialize the library */
@@ -70,7 +102,8 @@ int init()
     glfwMakeContextCurrent(window);
 
     glfwSetWindowSizeCallback(window, window_size_callback);
-
+    glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     /* Initialize glad */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -119,10 +152,12 @@ int loadContent()
      /* Create and apply basic shader */
     shader = new Shader("multiple_lights.vert", "multiple_lights.frag");
     lights.Bind(shader);
+    cam = Camera(cam_look_at, cam_position, cam_up);
+
     shader->apply();
 
     
-    shader->setUniformMatrix4fv("view", view_matrix);
+    shader->setUniformMatrix4fv("view", cam.GetCamera());
     shader->setUniformMatrix4fv("projection", projection_matrix );
     // Setting directional light direction
     shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,1.0f));
@@ -131,8 +166,7 @@ int loadContent()
     shader->setUniform3fv("dirLight.diffuse", glm::vec3(1.f, 1.f, 1.f));
     shader->setUniform3fv("dirLight.specular", glm::vec3(0.f, 0.f, 0.f));
  
-    shader->setUniform3fv("viewPos", cam_position);
-    cam_look_at = glm::normalize(cam_look_at - cam_position);
+    shader->setUniform3fv("viewPos", cam.GetPosition() );
 
     texture = new Texture();
     texture->load("res/models/alliance.png");
@@ -157,45 +191,44 @@ void render(float time)
     
     glm::vec3 pos = glm::vec3(cos(time),0, sin(time));
     
-
     shader->apply();
     texture->bind();
     // LineDrawer lineDrawer = LineDrawer();
     for (int i = 0; i < gameObjects.size(); i++){
         gameObjects[i].Render();
-        // gameObjects[i].RenderAABB(view_matrix,projection_matrix);
         
     }
-        // gameObjects[5].Render();
-        // gameObjects[5].RenderAABB(view_matrix,projection_matrix);
-    //mesh->Draw();
+        
 }
-float gameTime = 0.0f;
-
-void UpdateCamera(int key){
-    if(key == GLFW_KEY_A) {
-        cam_position = cam_position + glm::normalize(-glm::cross(cam_look_at, cam_up))*gameTime * 0.03f;
-    }
-    if(key == GLFW_KEY_D) {
-        cam_position = cam_position + glm::normalize(glm::cross(cam_look_at-cam_position, cam_up)) * gameTime * 0.03f;;
-    }
-    if(key == GLFW_KEY_W) {
-        cam_position = cam_position + glm::normalize(cam_look_at-cam_position)*gameTime* 0.03f;
-    }
-    if(key == GLFW_KEY_S) {
-        cam_position = cam_position - glm::normalize(cam_look_at-cam_position)*gameTime* 0.03f;
-    }
-    std::cout <<  glm::to_string(cam_position) << std::endl;
-
-    view_matrix      = glm::lookAt(cam_position, cam_position + cam_look_at, cam_up);
-
-    shader->setUniformMatrix4fv("view", view_matrix);
+int horizontal = 0;
+int vertical = 0;
+void UpdateCameraInput(int key, bool press){
+    horizontal += ((key == GLFW_KEY_A) * -1
+                 + (key == GLFW_KEY_D) * 1) * (press ? 1 : -1 );
+    vertical += ((key == GLFW_KEY_S) * -1 
+                 + (key == GLFW_KEY_W) * 1) * (press ? 1 : -1 );
+    
 }
+
+
+
+
+
+
+
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_A || key ==  GLFW_KEY_S || key == GLFW_KEY_W || key == GLFW_KEY_D)
-        UpdateCamera(key);
-
+    {
+        if (action == GLFW_PRESS){
+            UpdateCameraInput(key,true);
+        }
+        else if (action == GLFW_RELEASE){
+            UpdateCameraInput(key, false);
+        }
+    }
+    
 }
 
 void update()
@@ -211,6 +244,9 @@ void update()
         /* Update game time value */
         newTime  = static_cast<float>(glfwGetTime());
         gameTime = newTime - startTime;
+        cam.MoveCamera(vertical,horizontal,gameTime);
+        shader->setUniformMatrix4fv("view", cam.GetCamera());
+        
         /* Render here */
         render(gameTime);
 
