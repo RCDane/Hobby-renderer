@@ -22,8 +22,14 @@ public:
     /*  Mesh Data  */
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
-    unsigned int VAO;
 
+    // std::vector<Vertex> normals;
+    // std::vector<unsigned int> normals;
+    
+    // vertex array object
+    unsigned int VAO;
+    // normal array object
+    unsigned int NAO;
     /*  Functions  */
     // constructor
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
@@ -56,7 +62,6 @@ private:
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glGenBuffers(1, &EBO);
-
         glBindVertexArray(VAO);
         // load data into vertex buffers
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -68,11 +73,13 @@ private:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
+
+
         // set the vertex attribute pointers
         // vertex Positions
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        // vertex normals
+         //vertex normals
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
         // vertex texture coords

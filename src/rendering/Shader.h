@@ -17,6 +17,7 @@ public:
            const std::string & geometryShaderFilename               = "",
            const std::string & tessellationControlShaderFilename    = "",
            const std::string & tessellationEvaluationShaderFilename = "");
+    Shader();
 
     virtual ~Shader();
     static Shader BuildShader(const std::string & vertexShaderFilename,

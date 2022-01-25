@@ -10,7 +10,7 @@ public:
     glm::mat4 GetPosition();
     glm::mat4 GetRotation();
     glm::mat4 GetScale();
-    
+    glm::mat3 GetNormalMatrix();
     void SetPosition(glm::vec3 position);
     void setRotation(glm::vec3 rotation);
     

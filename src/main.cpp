@@ -24,7 +24,7 @@ Model   * mesh    = nullptr;
 Shader  * shader  = nullptr;
 Texture * texture = nullptr;
 /* Matrices */
-glm::vec3 cam_position = glm::vec3(0.0f, 1.0f, -1.2f);
+glm::vec3 cam_position = glm::vec3(0.0f, 0.0f, -1.2f);
 glm::vec3 cam_look_at  = glm::vec3(0.0f, 0.0f, 1.0f);
 glm::vec3 cam_up       = glm::vec3(0.0f, 1.0f, 0.0f);
 Camera cam = Camera(cam_look_at, cam_position, cam_up);
@@ -123,7 +123,7 @@ std::vector<GameObject> gameObjects;
 
 int loadContent()
 {
-    mesh = new Model("res/models/alliance.obj");
+    mesh = new Model("res/models/Stanford/scene.gltf");
     struct Light l1 = {glm::vec3(1.0f,.0f,-1.0f),
                       1.0f,
                       0.09f,
@@ -150,8 +150,8 @@ int loadContent()
     lights.Add(l2);
     lights.Add(l3);
      /* Create and apply basic shader */
-    shader = new Shader("multiple_lights.vert", "multiple_lights.frag");
-    lights.Bind(shader);
+    shader = new Shader("normal_visualization.vert", "normal_visualization.frag");
+    // lights.Bind(shader);
     cam = Camera(cam_look_at, cam_position, cam_up);
 
     shader->apply();
@@ -159,27 +159,30 @@ int loadContent()
     
     shader->setUniformMatrix4fv("view", cam.GetCamera());
     shader->setUniformMatrix4fv("projection", projection_matrix );
-    // Setting directional light direction
-    shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,1.0f));
-    shader->setUniform3fv("dirLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
     
-    shader->setUniform3fv("dirLight.diffuse", glm::vec3(1.f, 1.f, 1.f));
-    shader->setUniform3fv("dirLight.specular", glm::vec3(0.f, 0.f, 0.f));
+    // Setting directional light direction
+    // shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,1.0f));
+    // shader->setUniform3fv("dirLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+    
+    // shader->setUniform3fv("dirLight.diffuse", glm::vec3(1.f, 1.f, 1.f));
+    // shader->setUniform3fv("dirLight.specular", glm::vec3(0.f, 0.f, 0.f));
  
-    shader->setUniform3fv("viewPos", cam.GetPosition() );
+    // shader->setUniform3fv("viewPos", cam.GetPosition() );
 
     texture = new Texture();
-    texture->load("res/models/alliance.png");
-    texture->bind();
+
+    //// texture->load("res/models/alliance.png");
+    //texture->bind();
     Material *mat = new Material(shader, texture, texture, 1);
     GameObject gameObj = GameObject(mesh,mat, glm::vec3(0.,0.,0.), glm::vec3(1.), glm::vec3(1.,1.,1.));
-    GameObject gameObj2 = GameObject(mesh,mat, glm::vec3(1.,1.,0.), glm::vec3(1.), glm::vec3(1.,1.,1.));
+    gameObjects.push_back(gameObj);
+    /*GameObject gameObj2 = GameObject(mesh,mat, glm::vec3(1.,1.,0.), glm::vec3(1.), glm::vec3(1.,1.,1.));
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j <10; j++) {
             glm::vec3 pos = glm::vec3(i * 0.5-2., j * 1-3., 0.);
             gameObjects.push_back(GameObject(mesh, mat, pos, glm::vec3(1.), glm::vec3(1., 1., 1.)* 0.3f));
         }
-    }
+    }*/
 
     return true;
 }
@@ -192,11 +195,11 @@ void render(float time)
     glm::vec3 pos = glm::vec3(cos(time),0, sin(time));
     
     shader->apply();
-    texture->bind();
+    //texture->bind();
     // LineDrawer lineDrawer = LineDrawer();
     for (int i = 0; i < gameObjects.size(); i++){
         gameObjects[i].Render();
-        
+        gameObjects[i].RenderAABB(view_matrix, projection_matrix);
     }
         
 }

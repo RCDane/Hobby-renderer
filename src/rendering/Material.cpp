@@ -9,9 +9,9 @@ Material::Material(Shader* shader, Texture *diffuse, Texture *specular, float sh
 }
 
 void Material::BindParameters(){
-    this->shader->setUniform1f("material.shininess", this->shininess);
+    /*this->shader->setUniform1f("material.shininess", this->shininess);
     this->diffuse->bind(0);
-    this->specular->bind(1);
+    this->specular->bind(1);*/
 }
 Shader* Material::GetShader(){
     return this->shader;

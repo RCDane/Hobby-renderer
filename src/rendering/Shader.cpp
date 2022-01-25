@@ -10,6 +10,99 @@
 #include <helpers/RootDir.h>
 static std::map<std::string, Shader> shader_map = std::map<std::string, Shader>();
 std::string key = "";
+Shader::Shader() {
+    std::string vertexShaderFilename = "simple.vert";
+    std::string fragmentShaderFilename = "simple.frag";
+
+    const std::string shaderCodes[2] = { loadFile(vertexShaderFilename),
+                                         loadFile(fragmentShaderFilename) };
+
+    const std::string filenames[2] = { vertexShaderFilename,
+                                       fragmentShaderFilename };
+
+    program_id = glCreateProgram();
+
+    if (program_id == 0)
+    {
+        fprintf(stderr, "Error while creating program object.\n");
+        printf("Press any key to continue...\n");
+        getchar();
+        return;
+    }
+
+    for (int i = 0; i < sizeof(shaderCodes) / sizeof(std::string); ++i)
+    {
+        if (shaderCodes[i].empty())
+        {
+            continue;
+        }
+
+        GLuint shaderType = 0;
+
+        if (i == 0)
+            shaderType = GL_VERTEX_SHADER;
+        else if (i == 1)
+            shaderType = GL_FRAGMENT_SHADER;
+        else if (i == 2)
+            shaderType = GL_GEOMETRY_SHADER;
+        else if (i == 3)
+            shaderType = GL_TESS_CONTROL_SHADER;
+        else if (i == 4)
+            shaderType = GL_TESS_EVALUATION_SHADER;
+
+        if (shaderType == 0)
+        {
+            fprintf(stderr, "Error! Wrong shader type.\n");
+            continue;
+        }
+
+        GLuint shaderObject = glCreateShader(shaderType);
+
+        if (shaderObject == 0)
+        {
+            fprintf(stderr, "Error while creating %s.\n", filenames[i].c_str());
+            continue;
+        }
+
+        const char* shaderCode[1] = { shaderCodes[i].c_str() };
+
+        glShaderSource(shaderObject, 1, shaderCode, nullptr);
+        glCompileShader(shaderObject);
+
+        GLint result;
+        glGetShaderiv(shaderObject, GL_COMPILE_STATUS, &result);
+
+        if (result == GL_FALSE)
+        {
+            fprintf(stderr, "%s compilation failed!\n", filenames[i].c_str());
+
+            GLint logLen;
+            glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH, &logLen);
+
+            if (logLen > 0)
+            {
+                char* log = (char*)malloc(logLen);
+
+                GLsizei written;
+                glGetShaderInfoLog(shaderObject, logLen, &written, log);
+
+                fprintf(stderr, "Shader log: \n%s", log);
+                free(log);
+            }
+
+            continue;
+        }
+
+        glAttachShader(program_id, shaderObject);
+        glDeleteShader(shaderObject);
+    }
+
+    link();
+
+    if (uniformsLocations == nullptr) {
+        uniformsLocations = std::make_shared<std::map<std::string, GLint>>();
+    }
+}
 Shader Shader::BuildShader(const std::string & vertexShaderFilename,
                const std::string & fragmentShaderFilename,
                const std::string & geometryShaderFilename, 
@@ -38,7 +131,8 @@ Shader Shader::BuildShader(const std::string & vertexShaderFilename,
     //key.clear();
 
     Shader shader = Shader(vertexShaderFilename,fragmentShaderFilename,geometryShaderFilename,tessellationControlShaderFilename, tessellationEvaluationShaderFilename);
-    shader_map.insert(std::pair<std::string, Shader>(newStr, shader));
+    //shader_map.insert(std::pair<std::string, Shader>(newStr, shader));
+    shader_map[newStr] = shader;
     return shader;
 }
 
@@ -211,7 +305,7 @@ bool Shader::getUniformLocation(const std::string & uniform_name)
     }
     else
     {
-        fprintf(stderr, "Error! Can't find uniform %s\n", uniform_name.c_str());
+        // fprintf(stderr, "Error! Can't find uniform %s\n", uniform_name.c_str());
         return false;
     }
 }

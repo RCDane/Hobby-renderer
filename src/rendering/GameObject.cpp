@@ -28,6 +28,15 @@ glm::mat4 Transform::GetTransform(){
     
     return translation;
 }
+
+glm::mat3 Transform::GetNormalMatrix(){
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 scale = glm::scale(model,this->scale);
+    glm::mat4 translation = glm::translate(scale, this->position);
+
+    return glm::mat3(glm::inverse(glm::transpose(translation)));
+}
+
 void Transform::SetPosition(glm::vec3 position){
     this->position = position;
 }
@@ -57,7 +66,8 @@ void  GameObject::Render(){
     s->apply();
     glm::mat4 m = this->transform.GetTransform();
     s->setUniformMatrix4fv("model", m);
-    //  this->material->PrepareShader();
+    s->setUniformMatrix3fv("normalMatrix", this->transform.GetNormalMatrix());
+     this->material->PrepareShader();
     this->model->Draw();
     
 }
