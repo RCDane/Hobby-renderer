@@ -1,5 +1,4 @@
 #include "AABB.h"
-#include "LineDrawer.h"
 AABB::AABB(std::vector<Vertex> vertices, glm::mat4 model)
 {
     int size = vertices.size();
@@ -22,6 +21,7 @@ AABB::AABB(std::vector<Vertex> vertices, glm::mat4 model)
     }
     this->max = glm::vec3(xmax, ymax, zmax);
     this->min = glm::vec3(xmin,ymin,zmin);
+    this->drawer = new LineDrawer();
     build_AABB();
 }
 const std::vector<glm::ivec2> edges ={
@@ -62,8 +62,6 @@ void AABB::Render(glm::mat4 model, glm::mat4 view, glm::mat4 projection){
     {
         build_AABB();
     }
-    
-    LineDrawer line = LineDrawer();
-    line.DrawLines(this->verts, model,view, projection);
+    this->drawer->DrawLines(this->verts, model,view, projection);
 
 }
