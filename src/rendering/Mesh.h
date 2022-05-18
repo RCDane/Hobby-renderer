@@ -30,13 +30,15 @@ public:
     unsigned int VAO;
     // normal array object
     unsigned int NAO;
+
+    unsigned int material;
     /*  Functions  */
     // constructor
-    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, int materialId)
     {
         this->vertices = vertices;
         this->indices = indices;
-
+        this->material = materialId;
         // now that we have all the required data, set the vertex buffers and its attribute pointers.
         setupMesh();
     }
@@ -46,6 +48,7 @@ public:
     {
         // draw mesh
         glBindVertexArray(VAO);
+        
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }

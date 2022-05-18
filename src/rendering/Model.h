@@ -15,8 +15,9 @@
 #include <iostream>
 #include <map>
 #include <vector>
-
+#include "Texture.h"
 #include "Mesh.h"
+#include "Shader.h"
 #include "helpers/RootDir.h"
 
 class Model
@@ -24,20 +25,40 @@ class Model
 public:
     /*  Model Data */
     std::vector<Mesh> meshes;
+    std::vector<aiMaterial> materials;
+    std::vector<Texture> textures;
+    std::vector<aiMatrix4x4> matrices;
+    Texture* texture;
     std::string directory;
-
+    const aiScene* scene;
     /*  Functions   */
     // constructor, expects a filepath to a 3D model.
     Model(std::string const &path)
     {
         loadModel(path);
-    }
 
+    }
+    
     // draws the model, and thus all its meshes
-    void Draw()
+    void Draw(Shader* shader, glm::mat4 model, glm::mat4 normal)
     {
+
         for (unsigned int i = 0; i < meshes.size(); i++)
+        {
+            if(textures[meshes[i].material].notLoaded)
+                return;
+            textures[meshes[i].material].bind();
+            aiMatrix4x4 aiMat = matrices[i];
+            glm::mat4 m = {
+                aiMat.a1, aiMat.b1, aiMat.c1, aiMat.d1,
+                aiMat.a2, aiMat.b2, aiMat.c2, aiMat.d2,
+                aiMat.a3, aiMat.b3, aiMat.c3, aiMat.d3,
+                aiMat.a4, aiMat.b4, aiMat.c4, aiMat.d4
+            };
+            shader->setUniformMatrix4fv("model", m);
             meshes[i].Draw();
+
+        }
     }
 
 private:
@@ -47,7 +68,7 @@ private:
     {
         // read file via ASSIMP
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(ROOT_DIR + path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+        scene = importer.ReadFile(ROOT_DIR + path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
         // check for errors
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
@@ -55,23 +76,47 @@ private:
             return;
         }
         // retrieve the directory path of the filepath
-        directory = path.substr(0, path.find_last_of('/'));
+        directory = path.substr(0, path.find_last_of('//'));
 
         // process ASSIMP's root node recursively
         processNode(scene->mRootNode, scene);
-    }
+        textures = std::vector<Texture>(scene->mNumMaterials);
 
+        for (unsigned int i = 1; i < scene->mNumMaterials; i++) {
+            aiMaterial* material = scene->mMaterials[i];
+            aiString path;
+            if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0 && AI_SUCCESS == material->GetTexture(aiTextureType_DIFFUSE, 0, &path)) {
+                std::string FullPath = std::string(path.C_Str());
+                FullPath = directory + '\\' + FullPath;
+                std::cout << FullPath << "\n";
+                texture = new Texture();
+                texture->load(FullPath);
+                textures[i] =*texture;
+            }
+            else {
+                std::cout << "failed loading normal texture " << path.C_Str() << "\n";
+            }
+        }
+    }
+   
+    
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
     void processNode(aiNode *node, const aiScene *scene)
     {
         // process each mesh located at the current node
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
+            
             // the node object only contains indices to index the actual objects in the scene. 
             // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             meshes.push_back(processMesh(mesh, scene));
+            
+            
+            
+            matrices.push_back(node->mTransformation);
         }
+        
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
         for (unsigned int i = 0; i < node->mNumChildren; i++)
         {
@@ -126,7 +171,7 @@ private:
         }
 
         // return a mesh object created from the extracted mesh data
-        return Mesh(vertices, indices);
+        return Mesh(vertices, indices,mesh->mMaterialIndex);
     }
 };
 

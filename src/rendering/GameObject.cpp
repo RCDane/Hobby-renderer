@@ -65,10 +65,10 @@ void  GameObject::Render(){
     Shader* s = this->material->GetShader();
     s->apply();
     glm::mat4 m = this->transform.GetTransform();
-    s->setUniformMatrix4fv("model", m);
-    s->setUniformMatrix3fv("normalMatrix", this->transform.GetNormalMatrix());
-     this->material->PrepareShader();
-    this->model->Draw();
+    //s->setUniformMatrix4fv("model", m);
+    //s->setUniformMatrix3fv("normalMatrix", this->transform.GetNormalMatrix());
+    this->material->PrepareShader();
+    this->model->Draw(s, m, this->transform.GetNormalMatrix());
     
 }
 

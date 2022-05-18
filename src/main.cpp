@@ -32,7 +32,7 @@ Camera cam = Camera(cam_look_at, cam_position, cam_up);
 
 glm::mat4 world_matrix      = glm::rotate(glm::mat4(1.0f),3.14f, glm::vec3(0, 1, 0));
 glm::mat4 view_matrix       = glm::lookAt(cam_position, cam_look_at, cam_up);
-glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 10.0f);
+glm::mat4 projection_matrix = glm::perspectiveFov(glm::radians(60.0f), float(WINDOW_WIDTH), float(WINDOW_HEIGHT), 0.1f, 4000.0f);
 
 float rho = 0.0f;
 float phi = 0.0f;
@@ -123,7 +123,7 @@ std::vector<GameObject> gameObjects;
 
 int loadContent()
 {
-    mesh = new Model("res/models/sponza/sponza");
+    mesh = new Model("res/models/sponza/sponza.obj");
     struct Light l1 = {glm::vec3(1.0f,.0f,-1.0f),
                       1.0f,
                       0.09f,
@@ -150,7 +150,7 @@ int loadContent()
     lights.Add(l2);
     lights.Add(l3);
      /* Create and apply basic shader */
-    shader = new Shader("multiple_lights.vert", "multiple_lights.frag");
+    shader = new Shader("diffuse.vert", "diffuse.frag");
     // lights.Bind(shader);
     cam = Camera(cam_look_at, cam_position, cam_up);
 
@@ -161,18 +161,18 @@ int loadContent()
     shader->setUniformMatrix4fv("projection", projection_matrix );
     
     // Setting directional light direction
-     shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,1.0f));
+     /*shader->setUniform3fv("dirLight.direction",glm::vec3( 1.f, -1.0f,1.0f));
      shader->setUniform3fv("dirLight.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
     
      shader->setUniform3fv("dirLight.diffuse", glm::vec3(1.f, 1.f, 1.f));
-     shader->setUniform3fv("dirLight.specular", glm::vec3(0.f, 0.f, 0.f));
+     shader->setUniform3fv("dirLight.specular", glm::vec3(0.f, 0.f, 0.f));*/
  
     // shader->setUniform3fv("viewPos", cam.GetPosition());
 
     texture = new Texture();
 
-     texture->load("res/models/Stanford/grey.png");
-    texture->bind();
+    // texture->load("res/models/Stanford/grey.png");
+    //texture->bind();
     Material *mat = new Material(shader, texture, texture, 1);
     GameObject gameObj = GameObject(mesh,mat, glm::vec3(0.,0.,0.), glm::vec3(1.), glm::vec3(1.,1.,1.));
     gameObjects.push_back(gameObj);
@@ -199,7 +199,7 @@ void render(float time)
     // LineDrawer lineDrawer = LineDrawer();
     for (int i = 0; i < gameObjects.size(); i++){
         gameObjects[i].Render();
-        gameObjects[i].RenderAABB(view_matrix, projection_matrix);
+        //gameObjects[i].RenderAABB(view_matrix, projection_matrix);
     }
         
 }

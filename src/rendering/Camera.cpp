@@ -33,7 +33,7 @@ void Camera::MoveCamera(float forward, float right, float deltaTime){
     
     newDirection = glm::normalize(newDirection);
     
-    vrp += newDirection * deltaTime * 0.001f;
+    vrp += newDirection * deltaTime;
     
 
 
